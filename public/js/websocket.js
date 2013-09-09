@@ -10,29 +10,12 @@ Hummingbird.WebSocket = function(url, token) {
 
 Hummingbird.WebSocket.prototype = {
   // WebSocket callbacks
-  onClose: function() {
-    var self = this;
-    if(this.state == "retrying") {
-      // Wait a while to try restarting
-      console.log("still no socket, retrying in 3 seconds");
-      setTimeout(function() { self.connect() }, 3000);
-    } else {
-      // First attempt at restarting, try immediately
-      this.state = "retrying";
-      console.log("socket lost, retrying immediately");
-      setTimeout(function() { self.connect() }, 200);
-    }
+  onClose: function() {    
   },
 
   onOpen: function() {
     console.log("socket started");
-
-    this.state = "started";
-    if(this.token) {
-      this.socket.emit("auth", this.token);
-    } else {
-      this.onAuth(true);
-    }
+    this.state = "started";    
   },
 
   onAuth: function(isAuthed) {
@@ -43,53 +26,61 @@ Hummingbird.WebSocket.prototype = {
 
     console.log("socket authed");
     this.state = "authed";
-
-    while(this.handlers.length) {
-      var handler = this.handlers.shift();
-      this.socket.on(handler[0], handler[1]);
-    }
-
-    // We assume that all 'emit' events are room joins, so don't
-    // clear them out so that we can send them again in case the
-    // socket needs to reconnect
-    for(var i = 0; i < this.emitted.length; i++) {
-      var emitEvent = this.emitted[i];
-      this.socket.emit.apply(this.socket, emitEvent);
-    }
+        
   },
 
-  join: function(metric) {
-    this.emit("join", metric);
+  join: function(metric, callback) {
+    // Subscribe to the Realtime Framework metric channel    
+    this.socket.subscribe(metric, true, function (o,channel,message) {      
+      callback(message);
+    });
   },
 
-  on: function(event, callback) {
-    if(this.socket) {
-      this.socket.on(event, callback);
-    } else {
-      this.handlers.push([event, callback]);
-    }
+  on: function(event, callback) {    
   },
 
-  emit: function(event) {
-    if(this.socket && this.state == 'authed') {
-      this.socket.emit.apply(this.socket, arguments);
-    } else {
-      this.emitted.push(arguments);
-    }
+  emit: function(event) {    
   },
 
-  connect: function() {
-    console.log(this.url);
-    this.socket = io.connect(this.url);
-
+  connect: function(callback) {
+    console.log('Connected to ' + this.url);    
+    
     var _this = this;
 
-    this.socket.removeAllListeners();
-    this.socket.once('disconnect', function() { _this.onClose(); });
-    this.socket.once('connect', function() { _this.onOpen(); });
-    this.socket.once('auth', function(isAuthed) {  _this.onAuth(isAuthed); });
-    return this.socket;
-  },
+    // Loads the Realtime Framework Factory
+    loadOrtcFactory(IbtRealTimeSJType, function (factory, error) {
+       if (error != null) {
+           alert("Factory error: " + error.message);
+       } else {
+           if (factory != null) {          
+                // Creates a Realtime Framework client
+               _this.socket = factory.createClient();                               
+               _this.socket.setClusterUrl(_this.url);
+
+              // Change this to your free Realtime.co application key
+              // Get it at https://app.realtime.co/developers/getlicense
+
+               var applicationKey = '2Ze1dz';
+               var sessionToken = 'serverToken'
+
+              // Connects the client to the Realtime Framework Cluster
+               _this.socket.connect(applicationKey, sessionToken);               
+
+               _this.socket.onConnected = function (o) {
+                  // client is connected
+                  callback(_this); 
+                  _this.onAuth(true);
+                  _this.onOpen();   
+               }
+
+               _this.socket.onDisconnected = function (o) { 
+                  // client was disconnected
+                  _this.onClose();
+               };
+            }
+      }          
+    });    
+  }, 
 
   disconnect: function() {
     this.socket.disconnect();

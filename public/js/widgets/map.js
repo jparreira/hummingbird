@@ -83,13 +83,14 @@ $.extend(Hummingbird.Map.prototype, {
   name: "Map",
 
   onMessage: function(value, average) {
+        
     if(value && value.length > 0) {
       var self = this;
 
       for(var i in value) {
         var geo = value[i];
-        if(typeof(geo.latitude) == "undefined" || ! geo.city || geo.city == "") { continue; }
-        geo.label = [geo.city, (geo.country == 'US') ? geo.region : geo.country].join(', ');
+        if(typeof(geo.latitude) == "undefined") { continue; }
+        geo.label = [(!geo.city || geo.city == "") ? "N/A" : geo.city, (geo.country == 'US') ? geo.region : geo.country].join(', ');
 
         // Remove duplicates
         for(var i = 0, len = this.data.length; i < len; i++) {

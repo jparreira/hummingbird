@@ -4,7 +4,7 @@ Hummingbird.Base = function() {};
 
 Hummingbird.Base.prototype = {
 
-  messageCount: 0,
+  messageCount: 0,  
 
   initialize: function(options) {
     this.averageLog = [];
@@ -35,14 +35,21 @@ Hummingbird.Base.prototype = {
 
   start: function() {
     this.registerHandler();
-    this.socket.join(this.options.from);
+    var self = this;
+    this.socket.join(this.options.from, function (message) {        
+        self.onData(message);
+    });      
   },
 
   registerHandler: function() {
-    var self = this;
-    this.socket.on(this.options.from, function(data) {
-      self.onData.apply(self, [data]);
-    });
+
+    Realtime.EventManager.subscribe(
+            this.options.from,            
+            function(message, average){ 
+              this.onMessage(message, average);
+            }.bind(this)
+    );
+    
   },
 
   onMessage: function(message) {
@@ -53,12 +60,13 @@ Hummingbird.Base.prototype = {
     var average;
 
     this.messageCount += 1;
+    var parsedMessage = JSON.parse(message);
 
     // Calculate the average over N seconds if the averageOver option is set
-    if(this.options.averageOver && typeof(message) == "number") { average = this.addToAverage(message); }
+    if(this.options.averageOver && typeof(parsedMessage) == "number") { average = this.addToAverage(parsedMessage); }
 
-    if((!this.options.every) || (this.messageCount % this.options.every == 0)) {
-      this.onMessage(message, this.average());
+    if((!this.options.every) || (this.messageCount % this.options.every == 0)) {      
+      Realtime.EventManager.publish(this.options.from, parsedMessage, this.average());
     }
   },
 

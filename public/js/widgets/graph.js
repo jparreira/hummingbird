@@ -26,7 +26,7 @@ Hummingbird.Graph = function(element, socket, options) {
     barColor: null,
     graphHeight: 216,
     averageOver: 0.5,
-    startingScale: 50,
+    startingScale: 5,
     lineColors: {
       6400: "#FFFFFF",
       3200: "#BBBBBB",
@@ -51,7 +51,7 @@ Hummingbird.Graph = function(element, socket, options) {
   this.socket = socket;
   this.graph = this.element.find('div.graph');
   this.trafficLog = [];
-  this.buffer = [];
+  this.buffer = [];  
 
   this.createGraph();
   this.initialize(options);
@@ -63,21 +63,43 @@ $.extend(Hummingbird.Graph.prototype, {
 
   name: "Graph",
 
-  onMessage: function(message, average) {
-    var value = average * this.options.averageOver;
+  draw: function() {
+    if(this.buffer.length == 0) {
+      this.sendToBuffer(0);
+    }
 
+    if(this.pageIsVisible()) {
+        this.processBuffer();      
+    }      
+  },
+
+  onMessage: function(message, average) {
+    //var value = average * this.options.averageOver;
+    value = message;
+
+    /*
     if(this.pageIsVisible()) {
       this.processBuffer();
       this.drawLogPath(value);
     } else {
       this.sendToBuffer(value);
-    }
+    } */
+    
+    this.sendToBuffer(value);
   },
 
   processBuffer: function() {
+    var bufferAverage = 0;
+    var bufferLength = this.buffer.length;
+
     while(this.buffer.length > 0) {
-      this.drawLogPath(this.buffer.shift());
+      bufferAverage += this.buffer.shift();  
     }
+
+    if(bufferLength > 0)
+      bufferAverage = bufferAverage / bufferLength;
+
+    this.drawLogPath(bufferAverage);
   },
 
   sendToBuffer: function(value) {
@@ -152,6 +174,12 @@ $.extend(Hummingbird.Graph.prototype, {
     while(dataPoints--) {
       this.drawLogPath(0, true);
     }
+
+    var self = this;    
+    setInterval(function() {
+      self.draw();
+    }, 1000 / this.options.ratePerSecond);
+    
   },
 
   rescale: function(percent) {

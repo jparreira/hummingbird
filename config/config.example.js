@@ -14,7 +14,7 @@ module.exports = config = {
     // If you want to have the tracking pixel listen on a different port
     // (for instance in order to password-protect your dashboard) you can
     // specify the port to listen on (change from false to port number)
-    "tracking_port" : 8000,
+    "tracking_port" : false,
 
     // Allow stats to be sent over UDP instead of HTTP.  This works best for
     // sending stats from backend servers within the same datacenter as

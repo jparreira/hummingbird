@@ -19,6 +19,6 @@ Hummingbird.Logger.prototype = new Hummingbird.Base();
 $.extend(Hummingbird.Logger.prototype, {
   name: "Logger",
   onMessage: function(message, average) {
-    console.log("Minute Average: " + average.toFixed(this.options.decimalPlaces));
+    //console.log("Minute Average: " + average.toFixed(this.options.decimalPlaces));
   }
 });

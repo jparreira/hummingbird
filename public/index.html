@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
 
-  <title>Hummingbird</title>
+  <title>Hummingbird (using the Realtime Framework Messaging Service)</title>
 
   <meta name="description" content="Hummingbird is an open source real time analytics app.">
 
@@ -13,8 +13,9 @@
   <link rel="stylesheet" media="all" href="css/weekly.css" />
 
   <script src="js/jquery-1.7.min.js"></script>
-
-  <script src="socket.io/socket.io.js"></script>
+  <script src="js/event-emitter.js"></script>
+  
+  <script src="http://dfdbz2tdq3k01.cloudfront.net/js/2.1.0/ortc.js"></script>
 
   <script src="js/helpers.js"></script>
   <script src="js/websocket.js"></script>
@@ -58,15 +59,13 @@
   <div id="map_container" class="hummingbird_map"></div>
 
   <script>
-    $(document).ready(function() {
-      // change this to your host if the websocket server is on
-      // a different host
-      var WS_SERVER = "http://" + document.location.host.toString();
-
+    $(document).ready(function() {      
+      // The Realtime Framework Messaging Service cluster endpoint
+      var WS_SERVER = "http://ortc-developers.realtime.co/server/2.1/";
       var socket = new Hummingbird.WebSocket(WS_SERVER);
-      socket.connect();
+      socket.connect( function(socket) {
 
-      $("#total").hummingbirdGraph(socket,
+        $("#total").hummingbirdGraph(socket,
                                  {
                                    from: "view_totals",
                                    bgLineColor: "#514e57",
@@ -86,13 +85,19 @@
 
       $("#map_container").hummingbirdMap(socket, { from: "locations" });
 
+      
       new Hummingbird.Logger(window,
                              socket,
                              {
                                from: "view_totals",
                                every: 500
                              });
+      
 
+
+      });
+
+      
       $("#test_it").click(function(e) {
         e.preventDefault();
 

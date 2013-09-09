@@ -1,21 +1,21 @@
 {
   "name": "hummingbird",
-  "description": "A node.js statistics server",
+  "description": "A node.js statistics server using the Realtime Framework Messaging Service",
   "version": "0.2.0-17",
-  "dependencies": {
-    "socket.io": "0.9.6",
+  "dependencies": {    
+    "ibtrealtimesjnode": "2.1.8",
     "node-static": "0.5.9",
-    "geoip-no-city-leak": "0.4.9-1"
+    "geoip": "0.4.10"
   },
   "domains": [
     "demo.hummingbirdstats.com"
   ],
   "repository": {
     "type": "git",
-    "url": "http://github.com/mnutt/hummingbird.git"
+    "url": "http://github.com/jparreira/hummingbird.git"    
   },
   "engines": {
-    "node": ">=0.6.0"
+    "node": ">=0.8.0"
   },
   "subdomain": "hummingbird",
   "scripts": {
